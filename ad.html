@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Teachable Machine Image Model</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        background-color: #f9f9f9;
+      }
+      .container {
+        text-align: center;
+        margin-top: 20px;
+      }
+      #webcam-container {
+        margin: 20px 0;
+        border: 2px solid #ccc;
+        width: 200px;
+        height: 200px;
+      }
+      #label-container {
+        margin-top: 10px;
+      }
+      button {
+        margin: 10px;
+        padding: 10px 20px;
+        font-size: 16px;
+        cursor: pointer;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 5px;
+      }
+      button:hover {
+        background-color: #0056b3;
+      }
+      .log-container {
+        margin-top: 20px;
+        padding: 10px;
+        border: 1px solid #ccc;
+        background-color: #fff;
+        width: 90%;
+        max-width: 400px;
+        text-align: left;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Teachable Machine Image Model</h1>
+      <button type="button" onclick="init()">Start Webcam</button>
+      <button type="button" onclick="playGame()">Play Game</button>
+      <div id="webcam-container"></div>
+      <div id="label-container"></div>
+    </div>
+    <div class="log-container">
+      <h3>게임 로그</h3>
+      <ul id="game-log">
+        <li>사용자: 보, 컴퓨터: 보, 결과: 무승부</li>
+        <li>사용자: 주먹, 컴퓨터: 보, 결과: 컴퓨터가 이겼습니다!</li>
+        <li>사용자: 보, 컴퓨터: 바위, 결과: 사용자가 이겼습니다!</li>
+      </ul>
+      <p>총 승부 횟수: 3</p>
+      <p>승률: 33.33%</p>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+    <script>
+      const URL = "https://teachablemachine.withgoogle.com/models/2QB-O9kim/";
+
+      let model, webcam, labelContainer, maxPredictions;
+
+      async function init() {
+        const modelURL = URL + "model.json";
+        const metadataURL = URL + "metadata.json";
+
+        model = await tmImage.load(modelURL, metadataURL);
+        maxPredictions = model.getTotalClasses();
+
+        const flip = true;
+        webcam = new tmImage.Webcam(200, 200, flip);
+        await webcam.setup();
+        await webcam.play();
+        window.requestAnimationFrame(loop);
+
+        document.getElementById("webcam-container").appendChild(webcam.canvas);
+        labelContainer = document.getElementById("label-container");
+        for (let i = 0; i < maxPredictions; i++) {
+          labelContainer.appendChild(document.createElement("div"));
+        }
+      }
+
+      async function loop() {
+        webcam.update();
+        await predict();
+        window.requestAnimationFrame(loop);
+      }
+
+      async function predict() {
+        const prediction = await model.predict(webcam.canvas);
+        for (let i = 0; i < maxPredictions; i++) {
+          const classPrediction =
+            prediction[i].className +
+            ": " +
+            prediction[i].probability.toFixed(2);
+          labelContainer.childNodes[i].innerHTML = classPrediction;
+        }
+      }
+
+      function playGame() {
+        alert("게임 시작! 로직을 여기에 추가하세요.");
+      }
+    </script>
+  </body>
+</html>
